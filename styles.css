@@ -59,6 +59,9 @@ body {
 
 .field input[type="range"] { width: 130px; accent-color: var(--accent); }
 
+.check { cursor: pointer; user-select: none; }
+.check input { accent-color: var(--accent); }
+
 .readout {
   margin-left: auto;
   font-size: 13px;
@@ -169,9 +172,25 @@ body {
   color: #fff;
   font-weight: 600;
   line-height: 1.45;
-  letter-spacing: .2px;
   white-space: pre-wrap;
   overflow-wrap: break-word;
+}
+
+.prompter-text .row:empty::before { content: "\200b"; }
+
+.prompter-text.dynamic .row {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.measure-box {
+  position: absolute;
+  left: -100000px;
+  top: 0;
+  visibility: hidden;
+  white-space: pre;
+  font-family: var(--sans);
+  font-weight: 600;
 }
 
 .guide {

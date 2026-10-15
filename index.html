@@ -16,8 +16,13 @@
     <span>min</span>
   </label>
 
-  <label class="field">Text size
-    <input type="range" id="size" min="24" max="160" step="2" value="48">
+  <label class="field"><span id="size-label">Text size</span>
+    <input type="range" id="size" min="16" max="300" step="1" value="48">
+  </label>
+
+  <label class="field check">
+    <input type="checkbox" id="fit">
+    Fit lines
   </label>
 
   <span class="readout" id="wpm"></span>
@@ -48,12 +53,18 @@
     <button class="btn" id="restart">Restart</button>
     <span class="hud-time">Remaining <b id="remaining">0:00</b></span>
     <label class="field hud-size">Size
-      <input type="range" id="size2" min="24" max="160" step="2" value="48">
+      <input type="range" id="size2" min="16" max="300" step="1" value="48">
+    </label>
+    <label class="field check">
+      <input type="checkbox" id="fit2">
+      Fit
     </label>
     <button class="btn" id="fs">Fullscreen</button>
     <button class="btn" id="exit">Exit</button>
   </div>
 </section>
+
+<div class="measure-box" id="measure" aria-hidden="true"></div>
 
 <script src="app.js"></script>
 </body>

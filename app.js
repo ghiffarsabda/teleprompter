@@ -2,7 +2,9 @@
   'use strict';
 
   const ED_LINE = 22;
-  const LS = { text: 'tp.text', duration: 'tp.duration', size: 'tp.size' };
+  const FIT_REF = 100;
+  const FIT_MIN = 12;
+  const LS = { text: 'tp.text', duration: 'tp.duration', size: 'tp.size', fit: 'tp.fit' };
 
   const $ = (id) => document.getElementById(id);
   const ta = $('ta');
@@ -11,11 +13,15 @@
   const durationInput = $('duration');
   const sizeInput = $('size');
   const sizeInput2 = $('size2');
+  const sizeLabel = $('size-label');
+  const fitInput = $('fit');
+  const fitInput2 = $('fit2');
   const wpmEl = $('wpm');
   const startBtn = $('start');
   const prompterView = $('prompter-view');
   const prompter = $('prompter');
   const prompterText = $('prompter-text');
+  const measureBox = $('measure');
   const playBtn = $('play');
   const restartBtn = $('restart');
   const exitBtn = $('exit');
@@ -62,6 +68,7 @@
     localStorage.setItem(LS.text, ta.value);
     localStorage.setItem(LS.duration, durationInput.value);
     localStorage.setItem(LS.size, String(size));
+    localStorage.setItem(LS.fit, dynamic ? '1' : '0');
   }
 
   function load() {
@@ -71,11 +78,14 @@
     if (dur) durationInput.value = dur;
     const s = parseInt(localStorage.getItem(LS.size), 10);
     if (s) size = s;
+    dynamic = localStorage.getItem(LS.fit) === '1';
   }
 
   /* ---------- prompter ---------- */
 
   let size = 48;
+  let dynamic = false;
+  let rows = [];
   let playing = false;
   let rafId = 0;
   let baseScroll = 0;
@@ -110,6 +120,69 @@
     remainingEl.textContent = fmt(remaining);
   }
 
+  function renderRows() {
+    const lines = ta.value.split('\n');
+    const frag = document.createDocumentFragment();
+    rows = [];
+    for (let i = 0; i < lines.length; i++) {
+      const d = document.createElement('div');
+      d.className = 'row';
+      d.textContent = lines[i];
+      frag.appendChild(d);
+      rows.push(d);
+    }
+    prompterText.replaceChildren(frag);
+  }
+
+  function fitActive() {
+    return dynamic && !prompterView.hidden;
+  }
+
+  function fitRows() {
+    const cs = getComputedStyle(prompterText);
+    const contentW = prompterText.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    if (contentW <= 0) return;
+
+    const maxSize = Math.max(FIT_MIN, Math.min(size, prompter.clientHeight * 0.6));
+    const targetW = contentW * 0.995;
+
+    measureBox.style.fontSize = FIT_REF + 'px';
+    measureBox.replaceChildren();
+    const spans = [];
+    for (let i = 0; i < rows.length; i++) {
+      const s = document.createElement('span');
+      s.textContent = rows[i].textContent;
+      measureBox.appendChild(s);
+      spans.push(s);
+    }
+    void measureBox.offsetWidth;
+
+    let sum = 0;
+    let count = 0;
+    const sizes = spans.map(function (s) {
+      const w = s.getBoundingClientRect().width;
+      if (w <= 0) return 0;
+      const v = Math.max(FIT_MIN, Math.min(maxSize, FIT_REF * targetW / w));
+      sum += v;
+      count++;
+      return v;
+    });
+    const blankSize = count ? sum / count : maxSize * 0.6;
+
+    for (let i = 0; i < rows.length; i++) {
+      rows[i].style.fontSize = (Math.round((sizes[i] || blankSize) * 10) / 10) + 'px';
+    }
+  }
+
+  function applySizing() {
+    prompterText.classList.toggle('dynamic', dynamic);
+    if (dynamic) {
+      if (fitActive()) fitRows();
+    } else {
+      for (let i = 0; i < rows.length; i++) rows[i].style.fontSize = '';
+    }
+  }
+
   function setSize(value) {
     size = value;
     prompterText.style.fontSize = value + 'px';
@@ -117,9 +190,19 @@
     if (sizeInput2.value !== String(value)) sizeInput2.value = value;
   }
 
-  function retarget() {
+  function setDynamic(on) {
+    dynamic = on;
+    fitInput.checked = on;
+    fitInput2.checked = on;
+    sizeLabel.textContent = on ? 'Max size' : 'Text size';
+    applySizing();
+  }
+
+  function relayout() {
+    if (prompterView.hidden) return;
     const wasPlaying = playing;
     if (wasPlaying) pause();
+    applySizing();
     measure();
     computeSpeed();
     if (wasPlaying) play();
@@ -161,13 +244,15 @@
 
   function openPrompter() {
     if (!ta.value.trim()) { ta.focus(); return; }
-    prompterText.textContent = ta.value;
+    renderRows();
     setSize(size);
     prompterView.hidden = false;
     prompter.scrollTop = 0;
+    applySizing();
     measure();
     computeSpeed();
     updateHud();
+    playBtn.textContent = 'Play';
   }
 
   function exitPrompter() {
@@ -183,11 +268,17 @@
   ta.addEventListener('scroll', function () { gutter.scrollTop = ta.scrollTop; });
   new ResizeObserver(syncGutter).observe(ta);
 
-  durationInput.addEventListener('input', function () { updateWpm(); save(); if (!prompterView.hidden) retarget(); });
+  durationInput.addEventListener('input', function () { updateWpm(); save(); relayout(); });
 
-  function onSizeInput(e) { setSize(parseInt(e.target.value, 10)); retarget(); save(); }
+  function onSizeInput(e) { setSize(parseInt(e.target.value, 10)); relayout(); save(); }
   sizeInput.addEventListener('input', onSizeInput);
   sizeInput2.addEventListener('input', onSizeInput);
+
+  function onFitToggle(e) { setDynamic(e.target.checked); save(); }
+  fitInput.addEventListener('change', onFitToggle);
+  fitInput2.addEventListener('change', onFitToggle);
+
+  window.addEventListener('resize', relayout);
 
   startBtn.addEventListener('click', openPrompter);
   playBtn.addEventListener('click', function () { playing ? pause() : play(); });
@@ -206,6 +297,7 @@
 
   load();
   setSize(size);
+  setDynamic(dynamic);
   syncGutter();
   updateWpm();
 })();

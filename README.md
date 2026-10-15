@@ -17,6 +17,7 @@ Then open <http://localhost:8000>.
 - **Script editor with line numbers** — paste or type your script; every line is numbered, including wrapped lines.
 - **Timed scroll** — set how long the whole script should take (in minutes). Scroll speed is computed automatically so the full text scrolls in exactly that time.
 - **Text size** — adjust the prompter font size while writing or while prompting.
+- **Fit lines** (optional) — scales each row so it fills the width without wrapping: shorter rows get bigger text, longer rows get smaller text. Your row breaks are preserved. While it is on, the size slider sets the **maximum** size (rows shrink below it as needed).
 
 ## Controls
 
