@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teleprompter</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1 class="brand">Teleprompter</h1>
+
+  <label class="field">Total time
+    <input type="number" id="duration" min="0.1" step="0.5" value="8">
+    <span>min</span>
+  </label>
+
+  <label class="field">Text size
+    <input type="range" id="size" min="24" max="160" step="2" value="48">
+  </label>
+
+  <span class="readout" id="wpm"></span>
+
+  <button class="btn primary" id="start">Start</button>
+</header>
+
+<main id="editor-view">
+  <div class="editor">
+    <div class="gutter" id="gutter" aria-hidden="true"></div>
+    <textarea id="ta" spellcheck="false" autocomplete="off"
+      placeholder="Paste or type your script here..."></textarea>
+    <div class="mirror" id="mirror" aria-hidden="true"></div>
+  </div>
+</main>
+
+<section id="prompter-view" hidden>
+  <div class="prompter-scroll" id="prompter">
+    <div class="prompter-text" id="prompter-text"></div>
+  </div>
+
+  <div class="guide" aria-hidden="true"></div>
+
+  <div class="progress-track"><div class="progress-bar" id="progress"></div></div>
+
+  <div class="hud">
+    <button class="btn primary" id="play">Play</button>
+    <button class="btn" id="restart">Restart</button>
+    <span class="hud-time">Remaining <b id="remaining">0:00</b></span>
+    <label class="field hud-size">Size
+      <input type="range" id="size2" min="24" max="160" step="2" value="48">
+    </label>
+    <button class="btn" id="fs">Fullscreen</button>
+    <button class="btn" id="exit">Exit</button>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
