@@ -26,5 +26,6 @@ Then open <http://localhost:8000>.
 - `Esc` — exit the prompter.
 - `Restart` — jump back to the top.
 - `Fullscreen` — full-screen the prompter.
+- **Scroll any time** — mouse wheel / trackpad, or `↑` `↓` `PageUp` `PageDown`. This works while the prompter is running too: the auto-scroll carries on from wherever you leave it.
 
 Your script, duration, and text size are remembered in `localStorage`.

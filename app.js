@@ -88,8 +88,8 @@
   let rows = [];
   let playing = false;
   let rafId = 0;
-  let baseScroll = 0;
-  let baseTime = 0;
+  let lastTarget = 0;
+  let lastFrame = 0;
   let speed = 0;
   let maxScroll = 0;
 
@@ -214,8 +214,8 @@
     computeSpeed();
     if (speed <= 0) return;
     if (prompter.scrollTop >= maxScroll - 0.5) prompter.scrollTop = 0;
-    baseScroll = prompter.scrollTop;
-    baseTime = performance.now();
+    lastTarget = prompter.scrollTop;
+    lastFrame = performance.now();
     playing = true;
     playBtn.textContent = 'Pause';
     rafId = requestAnimationFrame(tick);
@@ -223,14 +223,26 @@
 
   function tick(now) {
     if (!playing) return;
-    const pos = baseScroll + speed * (now - baseTime);
-    if (pos >= maxScroll) {
+    const dt = Math.min(now - lastFrame, 100);
+    lastFrame = now;
+
+    const actual = prompter.scrollTop;
+    if (Math.abs(actual - lastTarget) > 2) {
+      lastTarget = actual;
+      updateHud();
+      rafId = requestAnimationFrame(tick);
+      return;
+    }
+
+    lastTarget += speed * dt;
+    if (lastTarget >= maxScroll) {
+      lastTarget = maxScroll;
       prompter.scrollTop = maxScroll;
       updateHud();
       pause();
       return;
     }
-    prompter.scrollTop = pos;
+    prompter.scrollTop = lastTarget;
     updateHud();
     rafId = requestAnimationFrame(tick);
   }
@@ -291,8 +303,16 @@
 
   document.addEventListener('keydown', function (e) {
     if (prompterView.hidden) return;
-    if (e.code === 'Space') { e.preventDefault(); playing ? pause() : play(); }
-    else if (e.key === 'Escape') exitPrompter();
+    if (e.code === 'Space') { e.preventDefault(); playing ? pause() : play(); return; }
+    if (e.key === 'Escape') { exitPrompter(); return; }
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+      prompter.scrollTop += e.key === 'PageDown' ? prompter.clientHeight * 0.8 : 60;
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      prompter.scrollTop -= e.key === 'PageUp' ? prompter.clientHeight * 0.8 : 60;
+      e.preventDefault();
+    }
   });
 
   load();
